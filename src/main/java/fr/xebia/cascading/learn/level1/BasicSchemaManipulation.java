@@ -42,7 +42,12 @@ public class BasicSchemaManipulation {
      * @see http://docs.cascading.org/cascading/3.0/userguide/ch17-subassemblies.html#retain
      */
     public static FlowDef retainField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-        return null;
+        Pipe pipe = new Pipe("plainCopy");
+        pipe = new Retain(pipe, new Fields( "line" ));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
     }
 
     /**
@@ -54,7 +59,12 @@ public class BasicSchemaManipulation {
      * @see http://docs.cascading.org/cascading/3.0/userguide/ch17-subassemblies.html#rename
      */
     public static FlowDef renameField(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-        return null;
+        Pipe pipe = new Pipe("plainCopy");
+        pipe = new Rename(pipe, new Fields( "renameme" ), new Fields( "line" ));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
     }
 
 }
