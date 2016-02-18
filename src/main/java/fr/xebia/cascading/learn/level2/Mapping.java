@@ -24,9 +24,16 @@ public class Mapping {
      * sink field(s) : "line"
      *
      * @see http://docs.cascading.org/cascading/3.0/userguide/ch05-pipe-assemblies.html#each-every
+     * @see http://www.programcreek.com/java-api-examples/index.php?api=cascading.operation.expression.ExpressionFunction
      */
     public static FlowDef filterWithExpression(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-        return null;
+        Pipe pipe = new Pipe("plainCopy");
+        ExpressionFilter filter = new ExpressionFilter("!line.contains(\"Hadoop\")", String.class);
+        pipe = new Each(pipe, new Fields("line"), filter);
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
     }
 
     /**
