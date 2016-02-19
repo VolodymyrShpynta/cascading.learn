@@ -7,6 +7,7 @@ import cascading.operation.expression.ExpressionFilter;
 import cascading.operation.expression.ExpressionFunction;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
+import cascading.pipe.assembly.Rename;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 
@@ -47,7 +48,14 @@ public class Mapping {
      * @see http://docs.cascading.org/cascading/3.0/userguide/ch05-pipe-assemblies.html#each-every
      */
     public static FlowDef transformWithExpression(Tap<?, ?, ?> source, Tap<?, ?, ?> sink) {
-        return null;
+        Pipe pipe = new Pipe("transformWithExpression");
+        ExpressionFunction expressionFunction = new ExpressionFunction(new Fields("expResult"), "line.toLowerCase()", String.class);
+        pipe = new Each(pipe, new Fields("line"), expressionFunction, Fields.RESULTS);
+        pipe = new Rename(pipe, new Fields( "expResult" ), new Fields( "line" ));
+        return FlowDef.flowDef()//
+                .addSource(pipe, source) //
+                .addTail(pipe)//
+                .addSink(pipe, sink);
     }
 
     /**
