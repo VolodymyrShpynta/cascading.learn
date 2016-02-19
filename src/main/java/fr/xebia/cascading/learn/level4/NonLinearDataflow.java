@@ -1,7 +1,9 @@
 package fr.xebia.cascading.learn.level4;
 
 import cascading.flow.FlowDef;
+import cascading.operation.expression.ExpressionFilter;
 import cascading.pipe.CoGroup;
+import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.pipe.joiner.InnerJoin;
 import cascading.tap.Tap;
@@ -54,7 +56,24 @@ public class NonLinearDataflow {
      */
     public static FlowDef split(Tap<?, ?, ?> source,
                                 Tap<?, ?, ?> gaullistSink, Tap<?, ?, ?> republicanSink, Tap<?, ?, ?> socialistSink) {
-        return null;
-    }
+        ExpressionFilter gaullistFilter = new ExpressionFilter("!party.contains(\"Gaullist\")", String.class);
+        Pipe gaullistPipe = new Each("gaullistPipe", new Fields("president", "party"), gaullistFilter);
 
+        ExpressionFilter republicanFilter = new ExpressionFilter("!party.contains(\"Republican\")", String.class);
+        Pipe republicanPipe = new Each("republicanPipe", new Fields("president", "party"), republicanFilter);
+
+        ExpressionFilter socialistFilter = new ExpressionFilter("!party.contains(\"Socialist\")", String.class);
+        Pipe socialistPipe = new Each("socialistPipe", new Fields("president", "party"), socialistFilter);
+
+        return FlowDef.flowDef()//
+                .addSource(gaullistPipe, source) //
+                .addSource(republicanPipe, source)
+                .addSource(socialistPipe, source)
+                .addTail(gaullistPipe)//
+                .addTail(republicanPipe)
+                .addTail(socialistPipe)
+                .addSink(gaullistPipe, gaullistSink)
+                .addSink(republicanPipe, republicanSink)
+                .addSink(socialistPipe, socialistSink);
+    }
 }

@@ -48,17 +48,18 @@ public class NonLinearDataflowTest {
         // inputs of the job
         String presidentsPath = "src/test/resources/fifth-france-presidents.txt";
         Scheme presidentsSchemeDefinition = new TextDelimited(new Fields("year", "president"), true, "\t");
-        Tap<?, ?, ?> presidentsSource = new FileTap( presidentsSchemeDefinition, presidentsPath );
+        Tap<?, ?, ?> presidentsSource = new FileTap(presidentsSchemeDefinition, presidentsPath);
 
         String partiesPath = "src/test/resources/fifth-france-parties.txt";
         Scheme partiesSchemeDefinition = new TextDelimited(new Fields("year", "party"), true, "\t");
-        Tap<?, ?, ?> partiesSource = new FileTap( partiesSchemeDefinition, partiesPath );
+        Tap<?, ?, ?> partiesSource = new FileTap(partiesSchemeDefinition, partiesPath);
 
         // actual output of the job
         String sinkPath = "target/level4/cogroup.txt";
         Scheme sinkScheme = new TextDelimited(new Fields("president", "party"), true, "\t");
-        Tap<?, ?, ?> sink = new FileTap( sinkScheme, sinkPath, SinkMode.REPLACE );
+        Tap<?, ?, ?> sink = new FileTap(sinkScheme, sinkPath, SinkMode.REPLACE);
 
+        // create the job definition, and run it
         FlowDef flowDef = NonLinearDataflow.cogroup(presidentsSource, partiesSource, sink);
         FlowConnector flowConnector = new LocalFlowConnector();
         Flow flow = flowConnector.connect(flowDef);
@@ -73,7 +74,8 @@ public class NonLinearDataflowTest {
     public void learnToSplit() throws Exception {
         // input of the job
         String sourcePath = "src/test/resources/level4/cogroup/expectation.txt";
-        Tap<?, ?, ?> source = new FileTap(new TextDelimited(true, "\t"), sourcePath);
+        Scheme sourceScheme = new TextDelimited(new Fields("president", "party"), true, "\t");
+        Tap<?, ?, ?> source = new FileTap(sourceScheme, sourcePath);
 
         // actual outputs of the job
         String gaullistPath = "target/level4/split-gaullist.txt";
@@ -93,7 +95,5 @@ public class NonLinearDataflowTest {
         Assert.sameContent(gaullistPath, "src/test/resources/level4/split/expectation-gaullist.txt");
         Assert.sameContent(republicanPath, "src/test/resources/level4/split/expectation-republican.txt");
         Assert.sameContent(socialistPath, "src/test/resources/level4/split/expectation-socialist.txt");
-
     }
-
 }
