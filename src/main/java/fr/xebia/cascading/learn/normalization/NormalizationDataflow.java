@@ -2,11 +2,10 @@ package fr.xebia.cascading.learn.normalization;
 
 import cascading.flow.FlowDef;
 import cascading.operation.expression.ExpressionFilter;
-import cascading.pipe.Each;
-import cascading.pipe.Every;
-import cascading.pipe.GroupBy;
-import cascading.pipe.Pipe;
+import cascading.pipe.*;
+import cascading.pipe.assembly.Retain;
 import cascading.pipe.assembly.Unique;
+import cascading.pipe.joiner.InnerJoin;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 
@@ -28,13 +27,25 @@ public class NormalizationDataflow {
                         "child_node_type", "child_node_number", "child_node_name",
                         "punch_code")),
                 Fields.RESULTS);
+        Fields joinParentFieldsRelationsPipe = new Fields("parent_node_type", "parent_node_number", "parent_node_name");
+        Fields joinFieldsNodesPipe = new Fields("node_type", "node_number", "node_name");
+        Fields newFieldsStep1 = new Fields("parent_node_type", "parent_node_number", "parent_node_name", "child_node_type", "child_node_number", "child_node_name", "punch_code",
+                "node_type", "node_number", "node_name", "parent_node_id");
+        Pipe joinedPipe = new CoGroup(nodesRelationsPipe, joinParentFieldsRelationsPipe, nodesPipe, joinFieldsNodesPipe, newFieldsStep1, new InnerJoin());
+        joinedPipe = new Retain(joinedPipe, new Fields("parent_node_id", "child_node_type", "child_node_number", "child_node_name", "punch_code"));
+
+        Fields joinChildFieldsRelationsPipe = new Fields("child_node_type", "child_node_number", "child_node_name");
+        Fields newFieldsStep2 = new Fields("parent_node_id", "child_node_type", "child_node_number", "child_node_name", "punch_code",
+                "node_type", "node_number", "node_name", "child_node_id");
+        joinedPipe = new CoGroup(joinedPipe, joinChildFieldsRelationsPipe, nodesPipe, joinFieldsNodesPipe, newFieldsStep2, new InnerJoin());
+        joinedPipe = new Retain(joinedPipe, new Fields("parent_node_id", "child_node_id", "punch_code"));
 
         return FlowDef.flowDef()//
                 .addSource(nodesPipe, simmonsSource) //
                 .addSource(nodesRelationsPipe, simmonsSource)
                 .addTail(nodesPipe)//
-                .addTail(nodesRelationsPipe)
+                .addTail(joinedPipe)
                 .addSink(nodesPipe, nodesSink)
-                .addSink(nodesRelationsPipe, nodesRelationsSink);
+                .addSink(joinedPipe, nodesRelationsSink);
     }
 }
