@@ -1,0 +1,9 @@
+parent_node_type,parent_node_number,parent_node_name,child_node_type,child_node_number,child_node_name,punch_code
+section_name,12,ENTERTAINMENT/LEISURE,sub_section_name,12.12,SPORTS INTEREST,NULL
+sub_section_name,12.12,SPORTS INTEREST,question,12.12.1,SPORTS INTEREST-LAST 12 MONTHS,NULL
+question,12.12.1,SPORTS INTEREST-LAST 12 MONTHS,option_name,12.12.1.14,MAJOR LEAGUE BASEBALL (MLB),NULL
+option_name,12.12.1.14,MAJOR LEAGUE BASEBALL (MLB),answer,NULL,A LITTLE BIT INTERESTED,110.20.0
+section_name,12,ENTERTAINMENT/LEISURE,sub_section_name,12.11,SPORTS & FITNESS,NULL
+sub_section_name,12.11,SPORTS & FITNESS,question,12.11.1,SPORTS-PLAYED/PARTICIPATED LAST 12 MOS,NULL
+question,12.11.1,SPORTS-PLAYED/PARTICIPATED LAST 12 MOS,option_name,[NULL],[NULL],NULL
+option_name,[NULL],[NULL],answer,NULL,JET SKIING/WAVE RUNNING/WATER BIKING,113.09.5

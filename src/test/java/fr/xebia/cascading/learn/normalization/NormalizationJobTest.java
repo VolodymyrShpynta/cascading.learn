@@ -31,16 +31,21 @@ public class NormalizationJobTest {
         Tap<?, ?, ?> simmonsSource = new FileTap(simmonsSchemeDefinition, presidentsPath);
 
         // actual output of the job
-        String sinkPath = "target/normalization/normalized.csv";
-        Scheme sinkScheme = new TextDelimited(true, ",");
-        Tap<?, ?, ?> normalizedSink = new FileTap(sinkScheme, sinkPath, SinkMode.REPLACE);
+        String nodesRelationsPath = "target/normalization/nodes-relations.csv";
+        Scheme nodesRelationsScheme = new TextDelimited(true, ",");
+        Tap<?, ?, ?> nodesRelationsSink = new FileTap(nodesRelationsScheme, nodesRelationsPath, SinkMode.REPLACE);
+
+        String nodesPath = "target/normalization/nodes.csv";
+        Scheme nodesScheme = new TextDelimited(true, ",");
+        Tap<?, ?, ?> nodesSink = new FileTap(nodesScheme, nodesPath, SinkMode.REPLACE);
 
         // create the job definition, and run it
-        FlowDef flowDef = NormalizationDataflow.normalize(simmonsSource, normalizedSink);
+        FlowDef flowDef = NormalizationDataflow.normalize(simmonsSource, nodesSink, nodesRelationsSink);
         FlowConnector flowConnector = new LocalFlowConnector();
         Flow flow = flowConnector.connect(flowDef);
         flow.complete();
 
-        Assert.sameContent(sinkPath, "src/test/resources/normalization/expectation.csv");
+        Assert.sameContent(nodesPath, "src/test/resources/normalization/nodes-expectation.csv");
+        Assert.sameContent(nodesRelationsPath, "src/test/resources/normalization/nodes-relations-expectation.csv");
     }
 }

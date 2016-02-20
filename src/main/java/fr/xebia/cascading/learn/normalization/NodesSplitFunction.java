@@ -8,11 +8,11 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
-public class CustomSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
+public class NodesSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
     private static final long serialVersionUID = 1L;
     private static final int SPLIT_CONSTANT = 1;
 
-    public CustomSplitFunction(Fields wordField) {
+    public NodesSplitFunction(Fields wordField) {
         super(1, wordField);
     }
 
