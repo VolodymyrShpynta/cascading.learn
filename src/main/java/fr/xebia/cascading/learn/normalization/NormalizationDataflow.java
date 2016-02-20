@@ -6,6 +6,7 @@ import cascading.pipe.Each;
 import cascading.pipe.Every;
 import cascading.pipe.GroupBy;
 import cascading.pipe.Pipe;
+import cascading.pipe.assembly.Unique;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 
@@ -13,14 +14,15 @@ import cascading.tuple.Fields;
 public class NormalizationDataflow {
 
     public static FlowDef normalize(Tap<?, ?, ?> simmonsSource, Tap<?, ?, ?> normalizedSink) {
-        Pipe pipe = new Each("split", Fields.ALL, new CustomSplitFunction<>(new Fields("group", "node_type", "node_number", "node_name")), Fields.RESULTS);
+        Pipe numPipe = new Each("split", Fields.ALL, new CustomSplitFunction<>(new Fields("group", "node_type", "node_number", "node_name")), Fields.RESULTS);
         ExpressionFilter nodeNameFilter = new ExpressionFilter("node_name.toLowerCase().contains(\"null\")", String.class);
-        pipe = new Each(pipe, new Fields("node_name"), nodeNameFilter);
-        pipe = new GroupBy(pipe, new Fields("group"));
-        pipe = new Every(pipe, new Fields("group"), new EnumeratorBuffer(new Fields("id")), Fields.SWAP);
+        numPipe = new Each(numPipe, new Fields("node_name"), nodeNameFilter);
+        numPipe = new Unique(numPipe, new Fields("node_type", "node_number", "node_name"));
+        numPipe = new GroupBy(numPipe, new Fields("group"));
+        numPipe = new Every(numPipe, new Fields("group"), new EnumeratorBuffer(new Fields("id")), Fields.SWAP);
         return FlowDef.flowDef()//
-                .addSource(pipe, simmonsSource) //
-                .addTail(pipe)//
-                .addSink(pipe, normalizedSink);
+                .addSource(numPipe, simmonsSource) //
+                .addTail(numPipe)//
+                .addSink(numPipe, normalizedSink);
     }
 }
