@@ -24,8 +24,8 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
     public void operate(@SuppressWarnings("rawtypes") FlowProcess flowProcess,
                         FunctionCall<Context> functionCall) {
         TupleEntry arguments = functionCall.getArguments();
-        Node parent = Node.SECTION;
-        Optional<Node> child = getChild(arguments, parent);
+        NodeDefinition parent = NodeDefinition.SECTION;
+        Optional<NodeDefinition> child = getChild(arguments, parent);
         while (child.isPresent()) {
             functionCall.getOutputCollector().add(
                     createTuple(arguments, parent, child.get())
@@ -35,15 +35,15 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
         }
     }
 
-    private Tuple createTuple(TupleEntry tupleEntry, Node parent, Node child) {
+    private Tuple createTuple(TupleEntry tupleEntry, NodeDefinition parent, NodeDefinition child) {
         Tuple tuple = new Tuple();
-        tuple.add(parent.name);
-        tuple.add(getFieldValue(tupleEntry, parent.number));
-        tuple.add(getFieldValue(tupleEntry, parent.name));
-        tuple.add(child.name);
-        tuple.add(Node.ANSWER.equals(child) ? "NULL" : getFieldValue(tupleEntry, child.number));
-        tuple.add(getFieldValue(tupleEntry, child.name));
-        tuple.add(Node.ANSWER.equals(child) ? getFieldValue(tupleEntry, PUNCH_CODE) : "NULL");
+        tuple.add(parent.getName());
+        tuple.add(getFieldValue(tupleEntry, parent.getNumber()));
+        tuple.add(getFieldValue(tupleEntry, parent.getName()));
+        tuple.add(child.getName());
+        tuple.add(NodeDefinition.ANSWER.equals(child) ? "NULL" : getFieldValue(tupleEntry, child.getNumber()));
+        tuple.add(getFieldValue(tupleEntry, child.getName()));
+        tuple.add(NodeDefinition.ANSWER.equals(child) ? getFieldValue(tupleEntry, PUNCH_CODE) : "NULL");
         return tuple;
     }
 
@@ -51,31 +51,15 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
         return tupleEntry.selectTuple(new Fields(fieldName)).getString(0).trim();
     }
 
-    private Optional<Node> getChild(TupleEntry tupleEntry, Node node) {
-        int nodeIndex = Arrays.asList(Node.values()).indexOf(node);
-        for (int i = nodeIndex + 1; i < Node.values().length; i++) {
-            Node childNode = Node.values()[i];
-            final String fieldValue = getFieldValue(tupleEntry, childNode.name);
+    private Optional<NodeDefinition> getChild(TupleEntry tupleEntry, NodeDefinition node) {
+        int nodeIndex = Arrays.asList(NodeDefinition.values()).indexOf(node);
+        for (int i = nodeIndex + 1; i < NodeDefinition.values().length; i++) {
+            NodeDefinition childNode = NodeDefinition.values()[i];
+            final String fieldValue = getFieldValue(tupleEntry, childNode.getName());
             if (!fieldValue.isEmpty() && !fieldValue.toLowerCase().contains("[null]")) {
                 return Optional.of(childNode);
             }
         }
         return Optional.empty();
-    }
-
-    private enum Node {
-        SECTION(ColumnsNames.SECTION_NUMBER, ColumnsNames.SECTION_NAME),
-        SUB_SECTION(ColumnsNames.SUB_SECTION_NUMBER, ColumnsNames.SUB_SECTION_NAME),
-        QUESTION(ColumnsNames.QUESTION_NUMBER, ColumnsNames.QUESTION),
-        OPTION(ColumnsNames.OPTION_NUMBER, ColumnsNames.OPTION_NAME),
-        ANSWER(null, ColumnsNames.ANSWER);
-
-        Node(String number, String name) {
-            this.number = number;
-            this.name = name;
-        }
-
-        private String number;
-        private String name;
     }
 }

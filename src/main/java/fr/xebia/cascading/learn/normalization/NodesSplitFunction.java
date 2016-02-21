@@ -8,11 +8,12 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
-import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+import java.util.Arrays;
+import java.util.Optional;
 
 public class NodesSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
     private static final long serialVersionUID = 1L;
-    private static final int SPLIT_CONSTANT = 1;
+    private static final int FAKE_FIELD_USED_FOR_GROUPING = 1;
 
     public NodesSplitFunction(Fields wordField) {
         super(1, wordField);
@@ -22,29 +23,33 @@ public class NodesSplitFunction<Context> extends BaseOperation<Context> implemen
     public void operate(@SuppressWarnings("rawtypes") FlowProcess flowProcess,
                         FunctionCall<Context> functionCall) {
         TupleEntry arguments = functionCall.getArguments();
-        Tuple section = createTuple(arguments, SECTION_NUMBER, SECTION_NAME);
-        Tuple subSection = createTuple(arguments, SUB_SECTION_NUMBER, SUB_SECTION_NAME);
-        Tuple question = createTuple(arguments, QUESTION_NUMBER, QUESTION);
-        Tuple option = createTuple(arguments, OPTION_NUMBER, OPTION_NAME);
-        Tuple answer = createTuple(arguments, null, ANSWER);
-
-        functionCall.getOutputCollector().add(section);
-        functionCall.getOutputCollector().add(subSection);
-        functionCall.getOutputCollector().add(question);
-        functionCall.getOutputCollector().add(option);
-        functionCall.getOutputCollector().add(answer);
+        Optional<NodeDefinition> node = Optional.of(NodeDefinition.SECTION);
+        do {
+            functionCall.getOutputCollector().add(
+                    createTuple(arguments, node.get()));
+            node = getNext(node.get());
+        } while (node.isPresent());
     }
 
-    private Tuple createTuple(TupleEntry tupleEntry, String nodeNumber, String nodeName) {
+    private Tuple createTuple(TupleEntry tupleEntry, NodeDefinition node) {
         Tuple tuple = new Tuple();
-        tuple.add(SPLIT_CONSTANT);
-        tuple.add(nodeName);
-        tuple.add(nodeNumber == null ? "NULL" : getFieldValue(tupleEntry, nodeNumber));
-        tuple.add(getFieldValue(tupleEntry, nodeName));
+        tuple.add(FAKE_FIELD_USED_FOR_GROUPING);
+        tuple.add(node.getName());
+        tuple.add(NodeDefinition.ANSWER.equals(node) ? "NULL" : getFieldValue(tupleEntry, node.getNumber()));
+        tuple.add(getFieldValue(tupleEntry, node.getName()));
         return tuple;
     }
 
     private String getFieldValue(TupleEntry tupleEntry, String fieldName) {
         return tupleEntry.selectTuple(new Fields(fieldName)).getString(0).trim();
+    }
+
+
+    private Optional<NodeDefinition> getNext(NodeDefinition node) {
+        int nodeIndex = Arrays.asList(NodeDefinition.values()).indexOf(node);
+        for (int i = nodeIndex + 1; i < NodeDefinition.values().length; i++) {
+            return Optional.of(NodeDefinition.values()[i]);
+        }
+        return Optional.empty();
     }
 }
