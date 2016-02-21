@@ -8,7 +8,6 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 public class NodesSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
@@ -27,7 +26,7 @@ public class NodesSplitFunction<Context> extends BaseOperation<Context> implemen
         do {
             functionCall.getOutputCollector().add(
                     createTuple(arguments, node.get()));
-            node = getNext(node.get());
+            node = NodeDefinition.getNext(node.get());
         } while (node.isPresent());
     }
 
@@ -42,14 +41,5 @@ public class NodesSplitFunction<Context> extends BaseOperation<Context> implemen
 
     private String getFieldValue(TupleEntry tupleEntry, String fieldName) {
         return tupleEntry.selectTuple(new Fields(fieldName)).getString(0).trim();
-    }
-
-
-    private Optional<NodeDefinition> getNext(NodeDefinition node) {
-        int nodeIndex = Arrays.asList(NodeDefinition.values()).indexOf(node);
-        for (int i = nodeIndex + 1; i < NodeDefinition.values().length; i++) {
-            return Optional.of(NodeDefinition.values()[i]);
-        }
-        return Optional.empty();
     }
 }

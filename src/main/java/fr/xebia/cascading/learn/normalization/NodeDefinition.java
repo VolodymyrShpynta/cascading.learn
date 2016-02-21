@@ -1,5 +1,8 @@
 package fr.xebia.cascading.learn.normalization;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 /**
  * Created by Volodymyr Shpynta on 21.02.2016.
  */
@@ -17,6 +20,16 @@ public enum NodeDefinition {
 
     private String number;
     private String name;
+
+    private static NodeDefinition[] enumValues = values();
+
+    public static Optional<NodeDefinition> getNext(NodeDefinition nodeDefinition) {
+        int nodeIndex = Arrays.asList(enumValues).indexOf(nodeDefinition);
+        if (nodeIndex + 1 < enumValues.length) {
+            return Optional.of(NodeDefinition.values()[nodeIndex + 1]);
+        }
+        return Optional.empty();
+    }
 
     public String getNumber() {
         return number;

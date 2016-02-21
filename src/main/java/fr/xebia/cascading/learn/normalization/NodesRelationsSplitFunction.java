@@ -8,10 +8,9 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
-import java.util.Arrays;
 import java.util.Optional;
 
-import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+import static fr.xebia.cascading.learn.normalization.ColumnsNames.PUNCH_CODE;
 
 public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
     private static final long serialVersionUID = 1L;
@@ -24,14 +23,14 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
     public void operate(@SuppressWarnings("rawtypes") FlowProcess flowProcess,
                         FunctionCall<Context> functionCall) {
         TupleEntry arguments = functionCall.getArguments();
-        NodeDefinition parent = NodeDefinition.SECTION;
-        Optional<NodeDefinition> child = getChild(arguments, parent);
+        NodeDefinition node = NodeDefinition.SECTION;
+        Optional<NodeDefinition> child = getChild(arguments, node);
         while (child.isPresent()) {
             functionCall.getOutputCollector().add(
-                    createTuple(arguments, parent, child.get())
+                    createTuple(arguments, node, child.get())
             );
-            parent = child.get();
-            child = getChild(arguments, parent);
+            node = child.get();
+            child = getChild(arguments, node);
         }
     }
 
@@ -52,13 +51,13 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
     }
 
     private Optional<NodeDefinition> getChild(TupleEntry tupleEntry, NodeDefinition node) {
-        int nodeIndex = Arrays.asList(NodeDefinition.values()).indexOf(node);
-        for (int i = nodeIndex + 1; i < NodeDefinition.values().length; i++) {
-            NodeDefinition childNode = NodeDefinition.values()[i];
-            final String fieldValue = getFieldValue(tupleEntry, childNode.getName());
-            if (!fieldValue.isEmpty() && !fieldValue.toLowerCase().contains("[null]")) {
-                return Optional.of(childNode);
+        Optional<NodeDefinition> childNode = NodeDefinition.getNext(node);
+        while (childNode.isPresent()) {
+            final String childFieldValue = getFieldValue(tupleEntry, childNode.get().getName());
+            if (!childFieldValue.isEmpty() && !childFieldValue.toLowerCase().contains("[null]")) {
+                return childNode;
             }
+            childNode = NodeDefinition.getNext(childNode.get());
         }
         return Optional.empty();
     }
