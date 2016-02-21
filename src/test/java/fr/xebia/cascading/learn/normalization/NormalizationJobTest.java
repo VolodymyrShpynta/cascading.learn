@@ -42,7 +42,7 @@ public class NormalizationJobTest {
         Tap<?, ?, ?> nodesSink = new FileTap(nodesScheme, nodesPath, SinkMode.REPLACE);
 
         // create the job definition, and run it
-        FlowDef flowDef = NormalizationDataflow.normalize(simmonsSource, nodesSink, nodesRelationsSink);
+        FlowDef flowDef = NormalizationDataFlow.normalize(simmonsSource, nodesSink, nodesRelationsSink);
         FlowConnector flowConnector = new LocalFlowConnector();
         Flow flow = flowConnector.connect(flowDef);
         flow.complete();
