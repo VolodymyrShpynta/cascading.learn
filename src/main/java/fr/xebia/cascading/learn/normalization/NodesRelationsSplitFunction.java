@@ -11,6 +11,8 @@ import cascading.tuple.TupleEntry;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+
 public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
     private static final long serialVersionUID = 1L;
 
@@ -41,7 +43,7 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
         tuple.add(child.name);
         tuple.add(Node.ANSWER.equals(child) ? "NULL" : getFieldValue(tupleEntry, child.number));
         tuple.add(getFieldValue(tupleEntry, child.name));
-        tuple.add(Node.ANSWER.equals(child) ? getFieldValue(tupleEntry, "punch_code") : "NULL");
+        tuple.add(Node.ANSWER.equals(child) ? getFieldValue(tupleEntry, PUNCH_CODE) : "NULL");
         return tuple;
     }
 
@@ -62,11 +64,11 @@ public class NodesRelationsSplitFunction<Context> extends BaseOperation<Context>
     }
 
     private enum Node {
-        SECTION("section_number", "section_name"),
-        SUB_SECTION("sub_section_number", "sub_section_name"),
-        QUESTION("question_number", "question"),
-        OPTION("option_number", "option_name"),
-        ANSWER(null, "answer");
+        SECTION(ColumnsNames.SECTION_NUMBER, ColumnsNames.SECTION_NAME),
+        SUB_SECTION(ColumnsNames.SUB_SECTION_NUMBER, ColumnsNames.SUB_SECTION_NAME),
+        QUESTION(ColumnsNames.QUESTION_NUMBER, ColumnsNames.QUESTION),
+        OPTION(ColumnsNames.OPTION_NUMBER, ColumnsNames.OPTION_NAME),
+        ANSWER(null, ColumnsNames.ANSWER);
 
         Node(String number, String name) {
             this.number = number;

@@ -8,6 +8,8 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
+import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+
 public class NodesSplitFunction<Context> extends BaseOperation<Context> implements Function<Context> {
     private static final long serialVersionUID = 1L;
     private static final int SPLIT_CONSTANT = 1;
@@ -20,11 +22,11 @@ public class NodesSplitFunction<Context> extends BaseOperation<Context> implemen
     public void operate(@SuppressWarnings("rawtypes") FlowProcess flowProcess,
                         FunctionCall<Context> functionCall) {
         TupleEntry arguments = functionCall.getArguments();
-        Tuple section = createTuple(arguments, "section_number", "section_name");
-        Tuple subSection = createTuple(arguments, "sub_section_number", "sub_section_name");
-        Tuple question = createTuple(arguments, "question_number", "question");
-        Tuple option = createTuple(arguments, "option_number", "option_name");
-        Tuple answer = createTuple(arguments, null, "answer");
+        Tuple section = createTuple(arguments, SECTION_NUMBER, SECTION_NAME);
+        Tuple subSection = createTuple(arguments, SUB_SECTION_NUMBER, SUB_SECTION_NAME);
+        Tuple question = createTuple(arguments, QUESTION_NUMBER, QUESTION);
+        Tuple option = createTuple(arguments, OPTION_NUMBER, OPTION_NAME);
+        Tuple answer = createTuple(arguments, null, ANSWER);
 
         functionCall.getOutputCollector().add(section);
         functionCall.getOutputCollector().add(subSection);

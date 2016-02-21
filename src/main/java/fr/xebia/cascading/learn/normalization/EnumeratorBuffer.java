@@ -8,6 +8,8 @@ import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 import cascading.tuple.TupleEntry;
 
+import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+
 import java.util.Iterator;
 
 /**
@@ -16,7 +18,7 @@ import java.util.Iterator;
 public class EnumeratorBuffer extends BaseOperation implements Buffer {
 
     public EnumeratorBuffer() {
-        super(1, new Fields("id"));
+        super(1, new Fields(ID));
     }
 
     public EnumeratorBuffer(Fields fieldDeclaration) {

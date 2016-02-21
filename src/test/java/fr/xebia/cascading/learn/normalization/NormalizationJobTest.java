@@ -14,6 +14,8 @@ import fr.xebia.cascading.learn.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+
 /**
  * Created by Volodymyr Shpynta on 19.02.2016.
  */
@@ -27,7 +29,7 @@ public class NormalizationJobTest {
     public void normalizeSimmonsData() throws Exception {
         // inputs of the job
         String presidentsPath = "src/test/resources/normalization/simmons-export.csv";
-        Scheme simmonsSchemeDefinition = new TextDelimited(new Fields("section_number", "section_name", "sub_section_number", "sub_section_name", "question_number", "question", "option_number", "option_name", "punch_code", "answer"), true, ",");
+        Scheme simmonsSchemeDefinition = new TextDelimited(new Fields(SECTION_NUMBER, SECTION_NAME, SUB_SECTION_NUMBER, SUB_SECTION_NAME, QUESTION_NUMBER, QUESTION, OPTION_NUMBER, OPTION_NAME, PUNCH_CODE, ANSWER), true, ",");
         Tap<?, ?, ?> simmonsSource = new FileTap(simmonsSchemeDefinition, presidentsPath);
 
         // actual output of the job

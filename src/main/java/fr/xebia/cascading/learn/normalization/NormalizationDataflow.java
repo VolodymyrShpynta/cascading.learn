@@ -9,43 +9,46 @@ import cascading.pipe.joiner.InnerJoin;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 
+import static fr.xebia.cascading.learn.normalization.ColumnsNames.*;
+import static java.lang.String.format;
+
 
 public class NormalizationDataflow {
 
     public static FlowDef normalize(Tap<?, ?, ?> simmonsSource, Tap<?, ?, ?> nodesSink, Tap<?, ?, ?> nodesRelationsSink) {
-        Pipe nodesPipe = new Each("nodesPipe", Fields.ALL, new NodesSplitFunction<>(new Fields("group", "node_type", "node_number", "node_name")), Fields.RESULTS);
-        ExpressionFilter nodeNameFilter = new ExpressionFilter("node_name.toLowerCase().contains(\"null\")", String.class);
-        nodesPipe = new Each(nodesPipe, new Fields("node_name"), nodeNameFilter);
-        nodesPipe = new Unique(nodesPipe, new Fields("node_type", "node_number", "node_name"));
-        nodesPipe = new GroupBy(nodesPipe, new Fields("group"));
-        nodesPipe = new Every(nodesPipe, new Fields("group"), new EnumeratorBuffer(new Fields("id")), Fields.SWAP);
+        Pipe nodesPipe = new Each("nodesPipe", Fields.ALL, new NodesSplitFunction<>(new Fields(TMP_GROUP, NODE_TYPE, NODE_NUMBER, NODE_NAME)), Fields.RESULTS);
+        ExpressionFilter nodeNameFilter = new ExpressionFilter(format("%s.toLowerCase().contains(\"[null]\")", NODE_NAME), String.class);
+        nodesPipe = new Each(nodesPipe, new Fields(NODE_NAME), nodeNameFilter);
+        nodesPipe = new Unique(nodesPipe, new Fields(NODE_TYPE, NODE_NUMBER, NODE_NAME));
+        nodesPipe = new GroupBy(nodesPipe, new Fields(TMP_GROUP));
+        nodesPipe = new Every(nodesPipe, new Fields(TMP_GROUP), new EnumeratorBuffer(new Fields(ID)), Fields.SWAP);
 
         Pipe nodesRelationsPipe = new Each("nodesRelationsPipe",
                 Fields.ALL,
                 new NodesRelationsSplitFunction<>(new Fields(
-                        "parent_node_type", "parent_node_number", "parent_node_name",
-                        "child_node_type", "child_node_number", "child_node_name",
-                        "punch_code")),
+                        PARENT_NODE_TYPE, PARENT_NODE_NUMBER, PARENT_NODE_NAME,
+                        CHILD_NODE_TYPE, CHILD_NODE_NUMBER, CHILD_NODE_NAME,
+                        PUNCH_CODE)),
                 Fields.RESULTS);
-        Fields joinParentFieldsRelationsPipe = new Fields("parent_node_type", "parent_node_number", "parent_node_name");
-        Fields joinFieldsNodesPipe = new Fields("node_type", "node_number", "node_name");
-        Fields newFieldsStep1 = new Fields("parent_node_type", "parent_node_number", "parent_node_name", "child_node_type", "child_node_number", "child_node_name", "punch_code",
-                "node_type", "node_number", "node_name", "parent_node_id");
-        Pipe joinedPipe = new CoGroup(nodesRelationsPipe, joinParentFieldsRelationsPipe, nodesPipe, joinFieldsNodesPipe, newFieldsStep1, new InnerJoin());
-        joinedPipe = new Retain(joinedPipe, new Fields("parent_node_id", "child_node_type", "child_node_number", "child_node_name", "punch_code"));
+        Fields parentFieldsToJoinOn = new Fields(PARENT_NODE_TYPE, PARENT_NODE_NUMBER, PARENT_NODE_NAME);
+        Fields nodeFieldsToJoinOn = new Fields(NODE_TYPE, NODE_NUMBER, NODE_NAME);
+        Fields resultOfJoinParentFields = new Fields(PARENT_NODE_TYPE, PARENT_NODE_NUMBER, PARENT_NODE_NAME, CHILD_NODE_TYPE, CHILD_NODE_NUMBER, CHILD_NODE_NAME, PUNCH_CODE,
+                NODE_TYPE, NODE_NUMBER, NODE_NAME, PARENT_NODE_ID);
+        Pipe joinedNodesRelationsPipe = new CoGroup(nodesRelationsPipe, parentFieldsToJoinOn, nodesPipe, nodeFieldsToJoinOn, resultOfJoinParentFields, new InnerJoin());
+        joinedNodesRelationsPipe = new Retain(joinedNodesRelationsPipe, new Fields(PARENT_NODE_ID, CHILD_NODE_TYPE, CHILD_NODE_NUMBER, CHILD_NODE_NAME, PUNCH_CODE));
 
-        Fields joinChildFieldsRelationsPipe = new Fields("child_node_type", "child_node_number", "child_node_name");
-        Fields newFieldsStep2 = new Fields("parent_node_id", "child_node_type", "child_node_number", "child_node_name", "punch_code",
-                "node_type", "node_number", "node_name", "child_node_id");
-        joinedPipe = new CoGroup(joinedPipe, joinChildFieldsRelationsPipe, nodesPipe, joinFieldsNodesPipe, newFieldsStep2, new InnerJoin());
-        joinedPipe = new Retain(joinedPipe, new Fields("parent_node_id", "child_node_id", "punch_code"));
+        Fields childFieldsToJoinOn = new Fields(CHILD_NODE_TYPE, CHILD_NODE_NUMBER, CHILD_NODE_NAME);
+        Fields resultOfJoinChildFields = new Fields(PARENT_NODE_ID, CHILD_NODE_TYPE, CHILD_NODE_NUMBER, CHILD_NODE_NAME, PUNCH_CODE,
+                NODE_TYPE, NODE_NUMBER, NODE_NAME, CHILD_NODE_ID);
+        joinedNodesRelationsPipe = new CoGroup(joinedNodesRelationsPipe, childFieldsToJoinOn, nodesPipe, nodeFieldsToJoinOn, resultOfJoinChildFields, new InnerJoin());
+        joinedNodesRelationsPipe = new Retain(joinedNodesRelationsPipe, new Fields(PARENT_NODE_ID, CHILD_NODE_ID, PUNCH_CODE));
 
         return FlowDef.flowDef()//
                 .addSource(nodesPipe, simmonsSource) //
                 .addSource(nodesRelationsPipe, simmonsSource)
                 .addTail(nodesPipe)//
-                .addTail(joinedPipe)
+                .addTail(joinedNodesRelationsPipe)
                 .addSink(nodesPipe, nodesSink)
-                .addSink(joinedPipe, nodesRelationsSink);
+                .addSink(joinedNodesRelationsPipe, nodesRelationsSink);
     }
 }
